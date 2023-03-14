@@ -1,0 +1,80 @@
+<!doctype html>
+<html style="height: calc(100% - 50px)">
+
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/xterm@3.6.0/dist/xterm.css" />
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+  
+  <script src="https://unpkg.com/xterm@3.6.0/dist/xterm.js"></script>
+  <script src="https://unpkg.com/xterm@3.6.0/dist/addons/fit/fit.js"></script>
+  <script src="https://unpkg.com/xterm@3.6.0/dist/addons/fullscreen/fullscreen.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+</head>
+
+<body style="height: 100%">
+  <div class="container">
+     <div class="host-terminal">
+        <div style="background: rgb(219, 237, 217); padding-bottom: 2%;">
+          <span style="font-size: medium;">Status: <span id="status">connecting...</span></span>
+
+            <h3>Welcome to your personal machine</h3>
+            <span>
+              Container Info:
+              {{container.attrs.Name|slice:"1:"}} || {{container.attrs.Config.Image}} || 
+              {{container.short_id}} || {{container.attrs.Config.Cmd.0}} {{container.attrs.NetworkSettings.IPAddress}}
+            </span>
+        </div>
+            <div id="terminal"></div>
+    </div>
+</div>
+  <script>
+
+Terminal.applyAddon(fit)
+Terminal.applyAddon(fullscreen)
+
+    var socket = io.connect({transports: ["websocket", "polling"]});
+
+    const status = document.getElementById("status")
+
+    var term = new Terminal({
+      fontSize: 14,
+      cursorBlink: true,
+    });
+
+    term.open(document.getElementById('terminal'));
+    term.writeln("Welcome to Container Terminal");
+    term.writeln("");
+    term.on('key', (key, ev) => {
+      socket.emit("pty_input_container", { "input": key, "id": window.location.pathname.split("/")[2] })
+
+    });
+
+    socket.on("pty_output_container", function (output) {
+      //console.log(output["output"])
+      term.write(output["output"])
+    })
+
+    socket.on("connect", () => {
+      status.innerHTML = '<span style="background-color: lightgreen;">connected</span>'
+      socket.emit("start_console", { "Id": "{{id}}" })
+      term.focus()
+
+    })
+
+    socket.on("disconnect_container", () => {
+      status.innerHTML = '<span style="background-color: #ff8383;">disconnected</span>'
+
+    })
+
+    function resize() {
+      term.fit()
+      socket.emit("resize_container", { "cols": term.cols, "rows": term.rows })
+    }
+
+    window.onresize = resize
+    window.onload = resize
+
+  </script>
+</body>

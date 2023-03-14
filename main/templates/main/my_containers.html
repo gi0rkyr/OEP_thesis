@@ -1,0 +1,51 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="container">
+    <div class="mt-5 mx-5">
+     <h1>My Containers</h1>
+        <br>
+        <br>
+        <a href="{% url "students_containers_new" %}">New</a>
+        <br>
+        <br>
+        <table id = "table" class = "table table-bordered">
+        <thead>
+            <tr>
+            <th>Student</th>
+            <th>Lesson</th>
+            <th>Charged Container IDs</th>
+            <th>Counter</th>
+            <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for object in object_list %}
+            <tr>
+            <td>{{ object.student }}</td>
+            <td>{{ object.name }}</td>
+            <td>{% for container_id in object.container_id.all %} - {{ container_id }} - {% endfor %}</td>
+            <td>{{ object.pages }}</td>
+            <td>
+                <div class='d-flex'>
+                    {% for container_id in object.container_id.all %}
+                   <button class="btn btn-success btn-sm me-3"
+                        onclick=" window.open('containers/console/{{container_id}}') ">Console
+                    </button>
+                    {% endfor %}
+            </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+
+    </div>        
+</div>
+<script src = "https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
+   <script>
+   $(document).ready(function() {
+       $('#table').DataTable();
+   });
+   
+   </script>
+{% endblock %}

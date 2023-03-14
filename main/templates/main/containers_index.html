@@ -1,0 +1,54 @@
+{% extends 'main.html' %} 
+{% block content %}
+   <div class="container">
+      <div class="mt-5 mx-5">
+         <h2>Containers</h2>
+         <table id = "table" class = "table table-bordered">
+            <thead class="alert-warning">
+                  <tr>
+                     <th scope="col">Name</th>
+                     <th scope="col">Image</th>
+                     <th scope="col">ID</th>
+                     <th scope="col">IP</th>
+                     <th scope="col">Ports</th>
+                     <th scope="col">Status</th>
+                     <th scope="col">Actions</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <!-- https://docker-py.readthedocs.io/en/stable/containers.html -->
+                  {% for item in containers %}
+                  <tr>
+                     <td scope="row">{{item.attrs.Name|slice:"1:"}}</td>
+                     <td>{{item.attrs.Config.Image}}</td>
+                     <td>{{item.short_id}}</td>
+                     <td>{{item.attrs.NetworkSettings.IPAddress}}</td>
+                     <td>{{item.attrs.NetworkSettings.Ports}}</td>
+                     <td>
+                        <div class='d-flex'>
+                           <span class="" id={{item.id}}-span>{{item.status}}</span>
+                        </div>
+                     </td>
+                     <td>
+                        <div class='d-flex'>
+                           <button class="btn btn-success btn-sm me-3"
+                              onclick=" window.open(window.location.href+'console/{{item.id}}') ">Console
+                           </button>
+                     </td>
+                  </tr>
+                  {% endfor %}
+               </tbody>
+            </table>
+
+      </div>
+      
+   </div>
+   <script src = "https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    
+   <script>
+   $(document).ready(function() {
+       $('#table').DataTable();
+   });
+   
+   </script>
+   {% endblock %}

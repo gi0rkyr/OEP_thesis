@@ -1,0 +1,155 @@
+{% if user.is_authenticated %}
+ <!doctype html>
+<html style="height: calc(100% - 50px)">
+
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/xterm@3.6.0/dist/xterm.css" />
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+  
+  <script src="https://unpkg.com/xterm@3.6.0/dist/xterm.js"></script>
+  <script src="https://unpkg.com/xterm@3.6.0/dist/addons/fit/fit.js"></script>
+  <script src="https://unpkg.com/xterm@3.6.0/dist/addons/fullscreen/fullscreen.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.js"></script>
+</head>
+
+<body style="height: 100%">
+  <div class="container">
+    <div class="lessons-container">
+        <div style="background: white; padding-bottom: 15px;">
+          <span style="font-size: medium;" >.</span>
+
+           <h1>Lesson 1</h1>
+           <h3>Introduction to containers</h3>
+        </div>
+        <Ul Class="Quiz">
+            <Li>
+                <H4>List your docker images and choose how many you have</H4>
+                <Ul Class="Choices">
+                    <Li>
+                        <Label
+                            ><Input Type="Radio" Name="Question1" Value="A" />
+                            <Span>2</Span>
+                        </Label>
+                    </Li>
+                    <Li>
+                        <Label>
+                            <Input Type="Radio" Name="Question2" Value="D" />
+                            <Span>4</Span>
+                        </Label>
+                    </Li>
+                    <Li>
+                        <Label>
+                            <Input Type="Radio" Name="Question2" Value="C" />
+                            <Span>3</Span>
+                        </Label>
+                    </Li>
+                    <Li>
+                        <Label>
+                            <Input Type="Radio" Name="Question2" Value="D" />
+                            <Span>4</Span>
+                        </Label>
+                    </Li>
+                </Ul>
+            </Li>
+            <Li>
+                <H4>Choose how many of theme are running</H4>
+                <Ul Class="Choices">
+                    <Li>
+                        <Label
+                            ><Input Type="Radio" Name="Question2" Value="A" />
+                            <Span>2</Span>
+                        </Label>
+                    </Li>
+                    <Li>
+                        <Label>
+                            <Input Type="Radio" Name="Question2" Value="D" />
+                            <Span>4</Span>
+                        </Label>
+                    </Li>
+                    <Li>
+                        <Label>
+                            <Input Type="Radio" Name="Question2" Value="C" />
+                            <Span>3</Span>
+                        </Label>
+                    </Li>
+                    <Li>
+                        <Label>
+                            <Input Type="Radio" Name="Question2" Value="D" />
+                            <Span>4</Span>
+                        </Label>
+                    </Li>
+                </Ul>
+            </Li>
+        </Ul>
+        <Button Class="View-Results" Onclick="ReturnScore()">Submit</Button>
+        <Span Id="Myresults" Class="My-Results"></Span>
+    </div>
+    <div class="container-terminal">
+        <div style="background: white; padding-bottom: 15px;">
+          <span style="font-size: medium;">Status: <span id="status">connecting...</span></span>
+
+            <h1>Your machine</h1>
+            <span>
+              Container Info:
+              {{container.attrs.Name|slice:"1:"}} || {{container.attrs.Config.Image}} || {{container.short_id}} ||
+              {{container.attrs.Config.Cmd.0}} || {{container.attrs.NetworkSettings.IPAddress}}
+            </span>
+        </div>
+            <div id="terminal"></div>
+    </div>
+</div>
+  <script>
+
+Terminal.applyAddon(fit)
+Terminal.applyAddon(fullscreen)
+
+    var socket = io.connect({transports: ["websocket", "polling"]});
+
+    const status = document.getElementById("status")
+
+    var term = new Terminal({
+      fontSize: 14,
+      cursorBlink: true,
+    });
+
+    term.open(document.getElementById('terminal'));
+    term.writeln("Welcome to Container Terminal");
+    term.writeln("");
+    term.on('key', (key, ev) => {
+      socket.emit("pty_input_container", { "input": key, "id": window.location.pathname.split("/")[2] })
+
+    });
+
+    socket.on("pty_output_container", function (output) {
+      //console.log(output["output"])
+      term.write(output["output"])
+    })
+
+    socket.on("connect", () => {
+      status.innerHTML = '<span style="background-color: lightgreen;">connected</span>'
+      socket.emit("start_console", { "Id": "{{id}}" })
+      term.focus()
+
+    })
+
+    socket.on("disconnect_container", () => {
+      status.innerHTML = '<span style="background-color: #ff8383;">disconnected</span>'
+
+    })
+
+    function resize() {
+      term.fit()
+      socket.emit("resize_container", { "cols": term.cols, "rows": term.rows })
+    }
+
+    window.onresize = resize
+    window.onload = resize
+
+  </script>
+</body>
+{% else %}
+  <p>You are not logged in</p>
+  <a href="{% url 'login' %}">Log In</a>
+{% endif %}

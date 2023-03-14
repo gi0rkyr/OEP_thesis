@@ -1,0 +1,90 @@
+<!doctype html>
+  <html style="height: calc(100% - 50px)">
+    
+     <head>
+        <link rel="stylesheet" href="https://unpkg.com/xterm@3.6.0/dist/xterm.css" />
+        {% load static %}
+        <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+  
+        <script src="https://unpkg.com/xterm@3.6.0/dist/xterm.js"></script>
+        <script src="https://unpkg.com/xterm@3.6.0/dist/addons/fit/fit.js"></script>
+        <script src="https://unpkg.com/xterm@3.6.0/dist/addons/fullscreen/fullscreen.js"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.3/socket.io.min.js"></script>
+    </head>
+
+    <body style="height: 100%">
+        <div class="container">
+            <div class="host-terminal">
+                <div style="background: white; padding-bottom: 5px;">
+                    <span style="font-size: small;">Status: <span style="font-size: small;" id="status">connecting...</span></span>
+                    <button id="button"; type="button"; onclick="myFunction()";>Connect</button> 
+                    <code>$ docker run --runtime=sysbox-runc --hostname=sysbox -it sysbox-base</code>
+                </div>
+                    <div id="terminal"></div>
+            </div>
+        </div>
+        
+      <script>
+
+        Terminal.applyAddon(fit)
+        Terminal.applyAddon(fullscreen)
+
+        var socket = io.connect({transports: ["websocket", "polling"]});
+
+        const status = document.getElementById("status")
+        const button = document.getElementById("button")
+
+        var term = new Terminal({
+            fontSize: 14,
+            rows: 50,
+            cursorBlink: true,
+            enableBold: true,
+        });
+
+        term.open(document.getElementById('terminal'));
+        term.writeln("Welcome to Host Terminal");
+        term.writeln("");
+        
+        term.on('key', (key, ev) => {
+            //console.log("pressed key", key)
+            socket.emit("pty_input", {"input": key})
+        });
+        
+        //testing paste
+        term.on('paste', function (key, ev) {
+        console.log('pasted')
+        socket.emit("pty_input", {"input": key})
+        });
+
+        socket.on("pty_output", function(output){
+            //console.log(output["output"])
+            term.write(output["output"])
+        })
+
+        socket.on("connect", () => {
+        status.innerHTML = '<span style="background-color: lightgreen;">connected</span>'
+        button.innerHTML = 'Disconnect'
+        })
+
+        socket.on("disconnect", () => {
+        status.innerHTML =  '<span style="background-color: #ff8383;">disconnected</span>'
+        button.innerHTML = 'Connect'
+
+        })
+
+        function myFunction(){
+            if (button.innerHTML =='Connect'){  
+               location.reload();
+            }
+
+            else if (button.innerHTML == "Disconnect"){
+                socket.emit("disconnect_request")
+            }
+        }
+      window.onresize = resize
+      window.onload = resize
+
+      </script>
+    </body>
+  </html>
