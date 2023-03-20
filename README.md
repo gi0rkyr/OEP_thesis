@@ -1,4 +1,4 @@
-# myapp
+# myapp setup
 python -m venv .my_env
  source my_env/bin/activate
  cd myapp/
