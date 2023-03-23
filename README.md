@@ -12,7 +12,6 @@ sh -x server-setup.sh
 python3 -m venv .my_venv
 source .my_venv/bin/activate
 pip3 install -r requirements.txt
-cd myapp/
 python3 manage.py makemigrations
 python3 manage.py migrate
 python3 manage.py collectstatic
