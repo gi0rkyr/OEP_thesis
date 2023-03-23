@@ -7,7 +7,7 @@ git clone https://github.com/gi0rkyr/OEP_thesis.git
 cd OEP_thesis/ 
 
 chmod u+x setup.sh
-sh -x server-setup.sh
+sh -x setup.sh
 
 python3 -m venv .my_venv
 source .my_venv/bin/activate
